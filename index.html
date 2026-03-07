@@ -1,0 +1,1212 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=0.7, maximum-scale=3.0, user-scalable=yes">
+    <title>Entegre Mantar Tesis Yönetimi</title>
+    <style>
+        /* --- MODERN RESET VE TEMEL AYARLAR --- */
+        * { box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol"; }
+        body { margin: 0; padding: 0; background-color: #f4f7f8; color: #334155; transition: background-color 0.3s, color 0.3s; }
+        h1, h2, h3, h4, h5 { color: #0f172a; margin-top: 0; transition: color 0.3s; }
+        
+        /* --- ÜST BAŞLIK (HEADER) --- */
+        .ust-sabit-baslik {
+            position: sticky; top: 0; z-index: 999999;
+            background: #0f172a; color: white;
+            padding: 11px 21px;
+            display: flex; justify-content: space-between; align-items: center;
+            box-shadow: 0 3px 4px -1px rgba(0, 0, 0, 0.1);
+            transition: background 0.3s;
+        }
+        .baslik-sol { font-size: 15px; font-weight: 700; letter-spacing: 0.5px; }
+        .baslik-sag { font-size: 9px; font-weight: 400; color: #94a3b8; }
+        
+        select#seasonSelector {
+            padding: 4px 8px; font-size: 9px; border-radius: 4px; font-weight: 600;
+            cursor: pointer; background: #3b82f6; color: white; border: none; outline: none; transition: 0.2s;
+        }
+        select#seasonSelector:hover { background: #2563eb; }
+        .btn-temizle {
+            padding: 4px 8px; font-size: 8px; border-radius: 4px; font-weight: 600;
+            cursor: pointer; background: #ef4444; color: white; border: none; transition: 0.2s;
+        }
+        .btn-temizle:hover { background: #dc2626; }
+
+        /* --- TEMA MENÜSÜ CSS --- */
+        .theme-menu-box {
+            display: none; position: absolute; right: 0; top: 25px; background: #1e293b; 
+            border: 1px solid #334155; border-radius: 6px; box-shadow: 0 7px 18px rgba(0,0,0,0.3); 
+            padding: 6px; flex-direction: column; gap: 3px; z-index: 1000000; min-width: 126px;
+        }
+        .theme-btn {
+            background: transparent; border: none; color: #cbd5e1; text-align: left; 
+            padding: 7px 8px; font-size: 9px; font-weight: 600; cursor: pointer; 
+            border-radius: 4px; transition: 0.2s;
+        }
+        .theme-btn:hover { background: #3b82f6; color: white; }
+
+        /* --- ANA NAVİGASYON (TABS) --- */
+        .main-nav {
+            background: #1e293b;
+            padding: 0 21px;
+            display: flex; gap: 14px;
+            position: sticky; top: 43px; z-index: 999998;
+            align-items: center;
+            box-shadow: 0 3px 7px rgba(0,0,0,0.05);
+            transition: background 0.3s;
+        }
+        .nav-tab {
+            padding: 13px 4px;
+            cursor: pointer; background: transparent; color: #94a3b8;
+            border: none; border-bottom: 2px solid transparent;
+            font-size: 10px; font-weight: 600; transition: all 0.3s ease;
+        }
+        .nav-tab:hover { color: #f8fafc; }
+        .nav-tab.active { color: #38bdf8; border-bottom-color: #38bdf8; }
+        .tab-panel { display: none; animation: fadeIn 0.4s ease; }
+        .tab-panel.active { display: block; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* --- GENEL KART TASARIMI --- */
+        .card { background: #ffffff; border-radius: 8px; padding: 14px; box-shadow: 0 3px 4px -1px rgba(0,0,0,0.05), 0 1px 3px -1px rgba(0,0,0,0.03); margin-bottom: 14px; border: 1px solid #e2e8f0; transition: background 0.3s, border-color 0.3s, box-shadow 0.3s; }
+        .card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 11px; border-bottom: 1px solid #f1f5f9; padding-bottom: 7px; transition: border-color 0.3s; }
+        
+        /* --- TAB 1 (KOMPOST) STİLLERİ --- */
+        .d1-body { padding: 18px 21px; max-width: 1050px; margin: auto; }
+        .ust-panel { display: flex; gap: 14px; margin-bottom: 18px; flex-wrap: wrap; }
+        .bildirim-paneli { flex: 3; border-top: 3px solid #3b82f6; }
+        .ayarlar-paneli { flex: 1; border-top: 3px solid #f59e0b; min-width: 175px; }
+        
+        .bildirim-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(98px, 1fr)); gap: 8px; margin-top: 11px; }
+        .gun-kutusu { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 7px; padding: 8px; transition: all 0.3s; }
+        .gun-kutusu:hover { transform: translateY(-2px); box-shadow: 0 7px 11px -2px rgba(0,0,0,0.05); }
+        .gun-kutusu h4 { margin: 0 0 8px 0; font-size: 9px; text-align: center; color: #475569; padding-bottom: 6px; border-bottom: 1px dashed #cbd5e1; }
+        .is-kalemi { font-size: 8px; padding: 4px 6px; margin-bottom: 4px; border-radius: 4px; border-left: 2px solid #3b82f6; background: #ffffff; font-weight: 600; color: #334155; box-shadow: 0 1px 1px rgba(0,0,0,0.02); transition: all 0.3s; }
+        
+        .vurgu-kirmizi { border: 2px solid #ef4444 !important; background-color: #fef2f2 !important; box-shadow: 0 3px 7px rgba(239, 68, 68, 0.15); }
+        .vurgu-kirmizi h4 { background-color: #ef4444 !important; color: white !important; margin: -8px -8px 7px -8px !important; padding: 6px !important; border-radius: 6px 6px 0 0 !important; border-bottom: none; }
+
+        .oda-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(224px, 1fr)); gap: 14px; }
+        .oda-kart { background: white; padding: 14px; border-radius: 8px; box-shadow: 0 3px 4px rgba(0,0,0,0.04); border: 1px solid #e2e8f0; transition: all 0.3s; }
+        .oda-kart:hover { box-shadow: 0 7px 11px rgba(0,0,0,0.08); border-color: #cbd5e1; }
+        .oda-baslik { border-bottom: 2px solid #f1f5f9; padding-bottom: 7px; margin-bottom: 11px; transition: border-color 0.3s; }
+        .oda-baslik h3 { margin: 0; font-size: 13px; color: #1e293b; transition: color 0.3s; }
+        
+        .input-group { display: flex; gap: 6px; margin-top: 6px; }
+        input[type="date"], input[type="number"], input[type="text"] {
+            width: 100%; padding: 6px 7px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 9px; color: #334155; outline: none; transition: all 0.3s; background: #f8fafc;
+        }
+        input:focus { border-color: #3b82f6; background: #fff; box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.1); }
+        label { font-size: 8px; font-weight: 600; color: #64748b; }
+        
+        .manuel-section { background: #fffbeb; padding: 11px; border-radius: 6px; border: 1px solid #fcd34d; margin-top: 11px; display: grid; grid-template-columns: 1fr 1fr; gap: 7px; transition: background 0.3s, border-color 0.3s; }
+        
+        /* Çizelgeler & Tablolar */
+        .table-d1, .table-d3 { width: 100%; border-collapse: separate; border-spacing: 0; font-size: 9px; }
+        .table-d1 th, .table-d3 th { background: #f8fafc; color: #475569; font-weight: 600; padding: 8px 11px; text-align: left; border-bottom: 2px solid #e2e8f0; border-top: 1px solid #e2e8f0; text-transform: uppercase; font-size: 8px; letter-spacing: 0.5px; cursor: pointer; transition: background 0.3s, border-color 0.3s, color 0.3s; }
+        .table-d1 td, .table-d3 td { padding: 8px 11px; border-bottom: 1px solid #e2e8f0; background: #fff; vertical-align: middle; transition: background 0.3s, border-color 0.3s; }
+        .table-d1 tr:hover td, .table-d3 tr:hover td { background: #f1f5f9; }
+        
+        .badge { padding: 4px 7px; border-radius: 14px; font-weight: 600; font-size: 8px; text-align: center; display: inline-block; min-width: 56px; box-shadow: 0 1px 2px rgba(0,0,0,0.05); }
+        .bg-gecmis { background-color: #fef3c7; color: #b45309; border: 1px solid #fde68a; }
+        .bg-bugun { background-color: #fee2e2; color: #b91c1c; border: 1px solid #fecaca; }
+        .bg-gelecek { background-color: #dcfce7; color: #15803d; border: 1px solid #bbf7d0; }
+        
+        .takvimler-wrapper { display: flex; gap: 14px; margin-top: 21px; margin-bottom: 28px; flex-wrap: wrap; }
+        .takvim-alan { flex: 1; min-width: 210px; border-top: 3px solid #64748b; }
+        .takvim-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 3px; background: #f1f5f9; padding: 3px; border-radius: 6px; transition: background 0.3s; }
+        .t-hucre { background: #fff; border-radius: 3px; min-height: 56px; padding: 3px; font-size: 8px; display: flex; flex-direction: column; gap: 1px; border: 1px solid transparent; transition: all 0.3s; }
+        .t-hucre:hover { border-color: #cbd5e1; }
+        .t-hucre b { color: #64748b; font-size: 8px; margin-bottom: 3px; display: block; }
+        .t-is { background: #eff6ff; color: #1d4ed8; padding: 2px 3px; border-radius: 3px; font-size: 6px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; transition: background 0.3s, color 0.3s; }
+
+        /* Butonlar */
+        .btn-modern { padding: 7px 14px; border: none; border-radius: 6px; font-weight: 600; cursor: pointer; transition: all 0.2s ease; display: inline-flex; align-items: center; justify-content: center; font-size: 9px; }
+        .btn-modern:active { transform: scale(0.97); }
+        .btn-primary { background: #3b82f6; color: white; box-shadow: 0 3px 4px rgba(59, 130, 246, 0.25); }
+        .btn-primary:hover { background: #2563eb; box-shadow: 0 4px 8px rgba(59, 130, 246, 0.3); }
+        .btn-success { background: #10b981; color: white; box-shadow: 0 3px 4px rgba(16, 185, 129, 0.25); }
+        .btn-success:hover { background: #059669; }
+        .btn-danger { background: #ef4444; color: white; }
+        .btn-danger:hover { background: #dc2626; }
+        
+        .footer-btns { position: fixed; bottom: 21px; right: 21px; z-index: 100; }
+        .btn-kaydet { padding: 11px 21px; font-size: 10px; border-radius: 35px; letter-spacing: 0.5px; text-transform: uppercase; }
+
+        /* --- TAB 2 (MANTAR TAKİBİ) STİLLERİ --- */
+        .d2-container { padding: 18px 21px; max-width: 100%; overflow-x: auto; }
+        .header-area { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; }
+        .table-fixed-wrapper { width: 100%; max-height: 65vh; overflow: auto; border-radius: 8px; box-shadow: 0 3px 11px rgba(0,0,0,0.05); border: 1px solid #e2e8f0; background: #fff; transition: background 0.3s, border-color 0.3s; }
+        
+        .table-d2 { border-collapse: separate; border-spacing: 0; width: 100%; min-width: 1190px; text-align: center; }
+        .table-d2 th { background: #1e293b; color: #f8fafc; font-size: 9px; font-weight: 600; padding: 8px 6px; border-right: 1px solid #334155; border-bottom: 1px solid #334155; letter-spacing: 0.5px; transition: background 0.3s, color 0.3s, border-color 0.3s; }
+        .table-d2 thead tr:nth-child(1) th { position: sticky; top: 0; z-index: 22; }
+        .table-d2 thead tr:nth-child(2) th { position: sticky; top: 30px; z-index: 21; background: #f8fafc; color: #475569; border-bottom: 2px solid #e2e8f0; border-right: 1px solid #e2e8f0; }
+        .table-d2 thead tr:nth-child(3) th { position: sticky; top: 60px; z-index: 20; background: #f1f5f9; color: #0f172a; border-bottom: 2px solid #cbd5e1; border-right: 1px solid #cbd5e1; }
+        
+        .sticky-col { position: sticky; left: 0; background-color: #0f172a !important; color: white !important; font-weight: bold; width: 70px !important; z-index: 30 !important; box-shadow: 2px 0 4px rgba(0,0,0,0.1); border-right: none !important; transition: background 0.3s; }
+        .table-d2 tbody td.sticky-col { background-color: #1e293b !important; }
+        .table-d2 tbody td.sticky-col input { color: #38bdf8; font-size: 10px; }
+        
+        .table-d2 td { border-right: 1px solid #e2e8f0; border-bottom: 1px solid #e2e8f0; padding: 0; height: 32px; transition: background 0.3s, border-color 0.3s; }
+        .table-d2 tbody tr:hover td:not(.sticky-col) { background: #f8fafc; }
+        
+        .room-input { width: 100%; height: 100%; border: none; background-color: transparent; font-size: 11px; font-weight: 600; text-align: center; outline: none; padding: 7px; color: #334155; transition: color 0.3s; }
+        .room-input:not(:placeholder-shown) { background-color: #dcfce7; color: #166534; font-weight: 700; }
+        .room-input:focus { background-color: #eff6ff; box-shadow: inset 0 0 0 2px #3b82f6; }
+        
+        .row-total { font-weight: 800; color: #ef4444; font-size: 11px; background: #fef2f2 !important; transition: background 0.3s; }
+        .sub-header th { font-size: 11px; color: #0f172a; }
+        
+        /* Verim Renkleri Yumuşatıldı */
+        .verim-kotu { background-color: #fee2e2 !important; color: #b91c1c !important; font-weight: bold; }
+        .verim-orta { background-color: #fef3c7 !important; color: #b45309 !important; font-weight: bold; }
+        .verim-iyi { background-color: #dcfce7 !important; color: #15803d !important; font-weight: bold; }
+
+        .add-row-bar { background: #fff; padding: 14px; border-radius: 8px; box-shadow: 0 3px 4px rgba(0,0,0,0.05); border: 1px solid #e2e8f0; display: flex; align-items: center; gap: 14px; margin-top: 14px; transition: background 0.3s, border-color 0.3s; }
+
+        /* --- TAB 3 (İZİN LİSTESİ) STİLLERİ --- */
+        .d3-wrapper { padding: 18px 21px; }
+        .status-pill { padding: 4px 8px; border-radius: 14px; color: white; font-weight: 600; min-width: 63px; display: inline-flex; justify-content: center; align-items: center; font-size: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+        .bg-orange { background: #f59e0b; } .bg-green { background: #10b981; } .bg-red { background: #ef4444; }
+        
+        .calendars-wrapper { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 14px; margin-top: 21px; }
+        .calendar-box { background: white; padding: 11px; border-radius: 8px; border: 1px solid #e2e8f0; box-shadow: 0 3px 4px rgba(0,0,0,0.03); transition: background 0.3s, border-color 0.3s; }
+        .calendar-box > div:first-child { background: #f8fafc; color: #334155; padding: 7px; border-radius: 4px; font-size: 10px; margin-bottom: 11px; border: 1px solid #e2e8f0; transition: background 0.3s, color 0.3s, border-color 0.3s; }
+        .day-cell { min-height: 49px; border: 1px solid #f1f5f9; border-radius: 3px; display: flex; flex-direction: column; align-items: center; padding: 3px; transition: 0.3s; }
+        .day-cell:hover { background: #f8fafc; border-color: #cbd5e1; }
+        .day-cell b { color: #64748b; font-size: 8px; margin-bottom: 3px; }
+        .event-tag { width: 100%; font-size: 7px; color: white; padding: 3px; margin-top: 1px; text-align: center; border-radius: 3px; cursor: pointer; font-weight: 600; box-shadow: 0 1px 1px rgba(0,0,0,0.1); transition: opacity 0.2s; }
+        .event-tag:hover { opacity: 0.8; }
+
+        /* MODALLAR */
+        #clearSeasonModal, #printModal { background: rgba(15, 23, 42, 0.7); backdrop-filter: blur(3px); transition: all 0.3s; }
+        .modal-content { background: white; padding: 21px; border-radius: 11px; box-shadow: 0 14px 18px -4px rgba(0, 0, 0, 0.1), 0 7px 7px -4px rgba(0, 0, 0, 0.04); transition: background 0.3s; }
+
+        /* =========================================================
+           TEMA STİLLERİ
+           ========================================================= */
+        /* TEMA 2: ORTA KOYU */
+        body[data-theme="orta"] { background-color: #64748b; color: #f8fafc; }
+        body[data-theme="orta"] h1, body[data-theme="orta"] h2, body[data-theme="orta"] h3, body[data-theme="orta"] h4, body[data-theme="orta"] h5 { color: #f1f5f9; }
+        body[data-theme="orta"] .card, body[data-theme="orta"] .oda-kart, body[data-theme="orta"] .calendar-box, body[data-theme="orta"] .add-row-bar { background: #475569; border-color: #334155; color: #f8fafc; }
+        body[data-theme="orta"] .card-header, body[data-theme="orta"] .oda-baslik { border-color: #334155; }
+        body[data-theme="orta"] .gun-kutusu { background: #334155; border-color: #1e293b; }
+        body[data-theme="orta"] .gun-kutusu h4 { color: #cbd5e1; border-bottom-color: #475569; }
+        body[data-theme="orta"] .is-kalemi { background: #475569; color: #e2e8f0; border-left-color: #60a5fa; }
+        body[data-theme="orta"] .table-d1 td, body[data-theme="orta"] .table-d3 td { background: #475569; border-color: #334155; color:#f8fafc;}
+        body[data-theme="orta"] .table-d1 th, body[data-theme="orta"] .table-d3 th { background: #334155; border-color: #1e293b; color:#cbd5e1;}
+        body[data-theme="orta"] .table-d1 tr:hover td, body[data-theme="orta"] .table-d3 tr:hover td { background: #334155; }
+        body[data-theme="orta"] input { background: #334155; border-color: #1e293b; color: #f8fafc; }
+        body[data-theme="orta"] .table-fixed-wrapper { background: #475569; border-color: #334155; }
+        body[data-theme="orta"] .table-d2 td { border-color: #334155; }
+        body[data-theme="orta"] .table-d2 thead tr:nth-child(2) th { background: #334155; color: #cbd5e1; border-color: #1e293b; }
+        body[data-theme="orta"] .table-d2 thead tr:nth-child(3) th { background: #475569; color: #f8fafc; border-color: #334155; }
+        body[data-theme="orta"] .table-d2 tbody tr:hover td:not(.sticky-col) { background: #334155; }
+        body[data-theme="orta"] .room-input { color: #f8fafc; }
+        body[data-theme="orta"] .t-hucre { background: #334155; border-color: #1e293b; }
+        body[data-theme="orta"] .t-hucre:hover { border-color: #64748b; }
+        body[data-theme="orta"] .manuel-section { background: #334155; border-color: #475569; }
+        body[data-theme="orta"] .takvim-grid { background: #1e293b; }
+        body[data-theme="orta"] .modal-content { background: #475569; color: white; }
+        body[data-theme="orta"] .calendar-box > div:first-child { background: #334155; border-color: #1e293b; color: #cbd5e1; }
+        body[data-theme="orta"] .day-cell { border-color: #334155; }
+        body[data-theme="orta"] .day-cell:hover { background: #334155; border-color: #475569; }
+
+        /* TEMA 3: KOYU (DARK) */
+        body[data-theme="koyu"] { background-color: #0f172a; color: #e2e8f0; }
+        body[data-theme="koyu"] h1, body[data-theme="koyu"] h2, body[data-theme="koyu"] h3, body[data-theme="koyu"] h4, body[data-theme="koyu"] h5 { color: #f8fafc; }
+        body[data-theme="koyu"] .card, body[data-theme="koyu"] .oda-kart, body[data-theme="koyu"] .calendar-box, body[data-theme="koyu"] .add-row-bar { background: #1e293b; border-color: #020617; box-shadow: 0 3px 7px rgba(0,0,0,0.5); }
+        body[data-theme="koyu"] .card-header, body[data-theme="koyu"] .oda-baslik { border-color: #334155; }
+        body[data-theme="koyu"] .gun-kutusu { background: #0f172a; border-color: #020617; }
+        body[data-theme="koyu"] .gun-kutusu h4 { color: #94a3b8; border-bottom-color: #1e293b; }
+        body[data-theme="koyu"] .is-kalemi { background: #1e293b; color: #cbd5e1; border-left-color: #38bdf8; }
+        body[data-theme="koyu"] .table-d1 td, body[data-theme="koyu"] .table-d3 td { background: #1e293b; border-color: #334155; color:#e2e8f0;}
+        body[data-theme="koyu"] .table-d1 th, body[data-theme="koyu"] .table-d3 th { background: #0f172a; border-color: #020617; color:#94a3b8;}
+        body[data-theme="koyu"] .table-d1 tr:hover td, body[data-theme="koyu"] .table-d3 tr:hover td { background: #0f172a; }
+        body[data-theme="koyu"] input { background: #0f172a; border-color: #334155; color: #f8fafc; }
+        body[data-theme="koyu"] .table-fixed-wrapper { background: #1e293b; border-color: #0f172a; }
+        body[data-theme="koyu"] .table-d2 td { border-color: #334155; }
+        body[data-theme="koyu"] .table-d2 thead tr:nth-child(2) th { background: #0f172a; color: #94a3b8; border-color: #020617; }
+        body[data-theme="koyu"] .table-d2 thead tr:nth-child(3) th { background: #1e293b; color: #f8fafc; border-color: #334155; }
+        body[data-theme="koyu"] .table-d2 tbody tr:hover td:not(.sticky-col) { background: #0f172a; }
+        body[data-theme="koyu"] .room-input { color: #f8fafc; }
+        body[data-theme="koyu"] .t-hucre { background: #0f172a; border-color: #020617; }
+        body[data-theme="koyu"] .t-hucre:hover { border-color: #334155; }
+        body[data-theme="koyu"] .manuel-section { background: #0f172a; border-color: #334155; }
+        body[data-theme="koyu"] .takvim-grid { background: #020617; }
+        body[data-theme="koyu"] .t-is { background: #1e293b; color: #38bdf8; }
+        body[data-theme="koyu"] .vurgu-kirmizi { background-color: #450a0a !important; border-color: #7f1d1d !important; }
+        body[data-theme="koyu"] .row-total { background-color: #450a0a !important; color: #fca5a5; }
+        body[data-theme="koyu"] .verim-kotu { background-color: #450a0a !important; color: #fca5a5 !important; }
+        body[data-theme="koyu"] .verim-orta { background-color: #422006 !important; color: #fcd34d !important; }
+        body[data-theme="koyu"] .verim-iyi { background-color: #064e3b !important; color: #6ee7b7 !important; }
+        body[data-theme="koyu"] .sub-header th { color: #f8fafc; }
+        body[data-theme="koyu"] .modal-content { background: #1e293b; color: white; }
+        body[data-theme="koyu"] .calendar-box > div:first-child { background: #0f172a; border-color: #020617; color: #94a3b8; }
+        body[data-theme="koyu"] .day-cell { border-color: #0f172a; }
+        body[data-theme="koyu"] .day-cell:hover { background: #0f172a; border-color: #334155; }
+        body[data-theme="koyu"] .takvim-grid > div[style*="background:#e2e8f0"] { background: #1e293b !important; color: #cbd5e1 !important; }
+        body[data-theme="koyu"] td[style*="font-weight:bold; color:#475569;"] { color: #cbd5e1 !important; }
+
+        /* TEMA 4: MODERN */
+        body[data-theme="modern"] { background: linear-gradient(135deg, #f0fdf4 0%, #e0f2fe 100%); font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        body[data-theme="modern"] .card, body[data-theme="modern"] .oda-kart, body[data-theme="modern"] .calendar-box, body[data-theme="modern"] .add-row-bar { border-radius: 14px; border: none; box-shadow: 0 7px 18px rgba(0,0,0,0.05); background: rgba(255, 255, 255, 0.9); backdrop-filter: blur(7px); }
+        body[data-theme="modern"] .ust-sabit-baslik { background: linear-gradient(90deg, #1e3a8a 0%, #3b82f6 100%); box-shadow: 0 3px 11px rgba(59, 130, 246, 0.3); }
+        body[data-theme="modern"] .main-nav { background: rgba(255, 255, 255, 0.8); backdrop-filter: blur(7px); padding: 7px 21px; box-shadow: 0 3px 11px rgba(0,0,0,0.02); }
+        body[data-theme="modern"] .nav-tab { color: #475569; padding: 8px 11px; border-radius: 8px; border: none; }
+        body[data-theme="modern"] .nav-tab:hover { background: #f1f5f9; color: #0f172a; }
+        body[data-theme="modern"] .nav-tab.active { background: #3b82f6; color: white; box-shadow: 0 3px 7px rgba(59,130,246,0.3); }
+        body[data-theme="modern"] input { border-radius: 7px; border: 2px solid #e2e8f0; background: #ffffff; transition: 0.3s; }
+        body[data-theme="modern"] input:focus { border-color: #3b82f6; box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15); }
+        body[data-theme="modern"] .btn-modern { border-radius: 8px; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 700; }
+        body[data-theme="modern"] .gun-kutusu { border-radius: 11px; border: none; background: #ffffff; box-shadow: 0 3px 7px rgba(0,0,0,0.03); }
+        body[data-theme="modern"] .oda-kart:hover { transform: translateY(-4px); box-shadow: 0 11px 21px rgba(0,0,0,0.1); }
+        body[data-theme="modern"] .table-fixed-wrapper { border-radius: 14px; border: none; overflow: hidden; }
+        body[data-theme="modern"] .table-d2 th { background: #3b82f6; color: white; border: none; }
+        body[data-theme="modern"] .sticky-col { background-color: #1e3a8a !important; }
+        body[data-theme="modern"] .table-d2 thead tr:nth-child(2) th { background: #dbeafe; color: #1e3a8a; }
+        body[data-theme="modern"] .table-d2 thead tr:nth-child(3) th { background: #eff6ff; color: #1e40af; }
+        body[data-theme="modern"] .takvim-grid { border-radius: 11px; overflow: hidden; }
+
+        /* TEMA DÜZELTMELERİ */
+        body[data-theme="orta"] { background-color: #7c8fa3 !important; }
+        body[data-theme="orta"] .card, body[data-theme="orta"] .oda-kart, body[data-theme="orta"] .calendar-box, body[data-theme="orta"] .add-row-bar { background: #6b8095 !important; }
+        body[data-theme="orta"] table, body[data-theme="koyu"] table, body[data-theme="orta"] td, body[data-theme="koyu"] td, body[data-theme="orta"] th, body[data-theme="koyu"] th { color: #f1f5f9 !important; }
+
+        /* TEMA 5: ELITE GREEN */
+        body[data-theme="elite"] { background: linear-gradient(135deg,#0f2f1f,#1e4d2b); color:#e6f4ea; }
+        body[data-theme="elite"] .ust-sabit-baslik{ background:linear-gradient(90deg,#14532d,#166534); }
+        body[data-theme="elite"] .main-nav{ background:#134e2a; }
+        body[data-theme="elite"] .nav-tab.active{ background:#22c55e; color:#fff; border-radius:7px; }
+        body[data-theme="elite"] .card, body[data-theme="elite"] .oda-kart, body[data-theme="elite"] .calendar-box{ background:#14532d; border-radius:13px; border:1px solid #166534; }
+
+        /* --- ORTA VE KOYU TEMA İÇİN HASAT TABLOSU OKUNABİLİRLİK DÜZELTMESİ --- */
+        body[data-theme="koyu"] .room-input:not(:placeholder-shown),
+        body[data-theme="orta"] .room-input:not(:placeholder-shown) {
+            background-color: #064e3b !important;
+            color: #6ee7b7 !important;
+            box-shadow: inset 0 0 0 1px #10b981;
+        }
+        body[data-theme="orta"] .row-total { background-color: #450a0a !important; color: #fca5a5 !important; }
+        body[data-theme="orta"] .verim-kotu { background-color: #450a0a !important; color: #fca5a5 !important; }
+        body[data-theme="orta"] .verim-orta { background-color: #422006 !important; color: #fcd34d !important; }
+        body[data-theme="orta"] .verim-iyi { background-color: #064e3b !important; color: #6ee7b7 !important; }
+
+        /* --- MOBİL UYGULAMA (APK) İÇİN KÜÇÜLTME AYARLARI --- */
+        @media screen and (max-width: 768px) {
+            .ust-sabit-baslik { padding: 8px 10px; }
+            .baslik-sol { font-size: 13px; }
+            .main-nav { padding: 0 10px; gap: 8px; }
+            .nav-tab { font-size: 9px; padding: 10px 2px; }
+            .d1-body, .d2-container, .d3-wrapper { padding: 10px 5px; }
+            
+            .oda-grid { grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 8px; }
+            .oda-kart { padding: 10px; }
+            .input-group { flex-direction: column; gap: 4px; }
+            .manuel-section { grid-template-columns: 1fr; }
+            
+            .table-d2 th, .table-d2 td { padding: 0; font-size: 9px; height: 28px; }
+            .room-input { font-size: 10px; padding: 4px; }
+            .btn-modern { padding: 5px 10px; font-size: 8px; }
+            .add-row-bar { flex-direction: column; align-items: stretch; gap: 8px; }
+        }
+
+        /* =========================================================
+           YAZDIRMA STİLLERİ (ÖLÇEKLENDİRME BURADA YAPILDI)
+           ========================================================= */
+        @media print {
+            @page { 
+                size: A4 landscape; 
+                margin: 2mm !important; /* Kenar boşluklarını sıfırladık */
+            }
+            
+            /* Gereksiz her şeyi gizle */
+            .main-nav, .ust-sabit-baslik, .footer-btns, .add-row-bar, .header-area, .btn-pdf, #oda-kontrol-butonlari, .print-oda-cb, .btn-modern, #printModal { 
+                display: none !important; 
+            }
+            
+            body { 
+                background: white !important; 
+                margin: 0 !important; 
+                padding: 0 !important; 
+                width: 100% !important;
+            }
+            
+            /* PDF Tablosu İçin Ana Kapsayıcıyı Sıfırla */
+            .d2-container, .tab-panel { 
+                padding: 0 !important; 
+                margin: 0 !important; 
+                display: block !important;
+            }
+
+            .table-fixed-wrapper { 
+                max-height: none !important; 
+                overflow: visible !important; 
+                border: none !important; 
+                box-shadow: none !important;
+                width: 100% !important;
+            }
+
+            /* --- ÖLÇEKLENDİRME (20 ODAYI SIĞDIRMA) --- */
+            .table-d2 { 
+                width: 100% !important; 
+                min-width: 100% !important; 
+                table-layout: fixed !important; /* Hücre genişliklerini zorla */
+                border-collapse: collapse !important;
+                zoom: 0.65; /* Sayfayı %65 oranında küçültür (20 oda için idealdir) */
+                -moz-transform: scale(0.65); /* Firefox desteği */
+                -moz-transform-origin: 0 0;
+            }
+
+            .table-d2 th, .table-d2 td { 
+                font-size: 8px !important; 
+                padding: 2px !important; 
+                border: 1px solid #000 !important; 
+                color: black !important; 
+                height: auto !important; 
+                background: white !important;
+                overflow: hidden;
+                word-wrap: break-word;
+            }
+
+            /* Oda başlık hücrelerini daralt */
+            .table-d2 th[id^="th-oda-"] {
+                width: auto !important;
+            }
+
+            .sticky-col { 
+                position: static !important; 
+                background: #eee !important; 
+                color: black !important; 
+                width: 45px !important; 
+                font-size: 8px !important;
+                box-shadow: none !important;
+            }
+
+            .room-input { 
+                font-size: 9px !important; 
+                padding: 0 !important; 
+                color: black !important; 
+                background: transparent !important; 
+                font-weight: bold !important;
+            }
+
+            .print-only-header {
+                display: block !important;
+                margin-bottom: 10px !important;
+            }
+            
+            .print-only-header h2 { font-size: 14px !important; margin: 0 !important; }
+            .print-only-header p { font-size: 10px !important; margin: 4px 0 !important; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="ust-sabit-baslik">
+    <div class="baslik-sol">Mantar Üretim Kontrol</div>
+    <div style="display:flex; align-items:center; gap:18px;">
+        <div style="display:flex; align-items:center; gap:7px;">
+            <span style="font-size:9px; color:#cbd5e1;">Aktif Sezon:</span>
+            <select id="seasonSelector" onchange="sezonDegistir(this.value)">
+                <option value="1">Sezon 1</option>
+                <option value="2">Sezon 2</option>
+                <option value="3">Sezon 3</option>
+                <option value="4">Sezon 4</option>
+                <option value="5">Sezon 5</option>
+                <option value="6">Sezon 6</option>
+            </select>
+            <button class="btn-temizle" onclick="sezonTemizleBaslat()">🗑️ Sezonu Temizle</button>
+        </div>
+        
+        <div style="display:flex; align-items:center; gap:7px; position:relative;">
+            <div class="baslik-sag">Design by Veli Türkmen</div>
+            <button id="themeMenuBtn" onclick="toggleThemeMenu()" style="background:none; border:none; cursor:pointer; font-size:14px; padding:0; filter: drop-shadow(0 1px 1px rgba(0,0,0,0.3)); transition:transform 0.2s;" title="Tema Seçenekleri">🎨</button>
+            
+            <div id="themeDropdown" class="theme-menu-box">
+                <button class="theme-btn" onclick="setTheme('default')">✨ Varsayılan Tema</button>
+                <button class="theme-btn" onclick="setTheme('orta')">🌗 Orta Koyu (Pastel)</button>
+                <button class="theme-btn" onclick="setTheme('koyu')">🌙 Koyu Tema (Dark)</button>
+                <button class="theme-btn" onclick="setTheme('modern')">🚀 Modern (Yenilikçi)</button>
+                <button class="theme-btn" onclick="setTheme('elite')">🌲 Elite Green</button>
+                <hr style="border:none; border-top:1px solid #334155; margin:4px 0;">
+                <button class="theme-btn" onclick="yedekAl()">💾 Yedek Al</button>
+                <button class="theme-btn" onclick="yedekYukle()">📂 Yedek Geri Yükle</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="main-nav">
+    <button class="nav-tab active" onclick="openMainTab(event, 'tab-mantar-tesisi')">Kompost Kaydı</button>
+    <button class="nav-tab" onclick="openMainTab(event, 'tab-mantar-takibi')">Mantar Takibi</button>
+    <button class="nav-tab" onclick="openMainTab(event, 'tab-izin-listesi')">İzin Listesi</button>
+    <div style="color:#475569; font-size:13px; margin: 0 7px;">|</div>
+    <div id="dynamic-tab-title" style="color:white; font-size:11px; font-weight:600; transition: color 0.3s;">Tesis Yönetimi</div>
+</div>
+
+<div id="tab-mantar-tesisi" class="tab-panel active">
+    <div class="d1-body">
+        
+        <div class="ust-panel">
+            <div class="card bildirim-paneli">
+                <div class="card-header">
+                    <h3 style="margin:0; font-size:11px;">📅 6 Günlük İş Planı</h3>
+                </div>
+                <div id="bildirimGrid" class="bildirim-grid"></div>
+            </div>
+            
+            <div class="card ayarlar-paneli">
+                <div class="card-header">
+                    <h3 style="margin:0; font-size:11px;">⚙️ Gün Aralıkları</h3>
+                </div>
+                <div id="ayarlarListesi" style="font-size: 9px; color: #475569; line-height: 2;"></div>
+            </div>
+        </div>
+        
+        <div class="card grafik-konteynir" style="margin-bottom: 21px; overflow-x: auto;">
+            <div class="card-header"><h3 style="margin:0; font-size: 11px;">📊 Genel Çizelge (Sıralı İş Akışı)</h3></div>
+            <table class="table-d1">
+                <thead><tr><th>Oda No</th><th>Kompost</th><th onclick="aralikGuncelle('toprak')">Toprak <span class="edit-hint" id="hint_toprak"></span></th><th onclick="aralikGuncelle('tirmik')">Tırmık <span class="edit-hint" id="hint_tirmik"></span></th><th onclick="aralikGuncelle('hava')">Hava <span class="edit-hint" id="hint_hava"></span></th><th onclick="aralikGuncelle('hasat1')">1. Hasat <span class="edit-hint" id="hint_hasat1"></span></th><th onclick="aralikGuncelle('hasat2')">2. Hasat <span class="edit-hint" id="hint_hasat2"></span></th></tr></thead>
+                <tbody id="tabloGövde"></tbody>
+            </table>
+        </div>
+
+        <div class="card" style="padding: 0; margin-bottom: 21px;">
+            <div class="card-header" style="margin: 0; padding: 14px 21px; cursor: pointer; border-bottom: 1px solid transparent;" onclick="toggleOdalar()" title="Tıkla: Odaları Aç / Kapat">
+                <h3 style="margin:0; font-size:13px; display:flex; justify-content:space-between; width:100%; align-items:center;">
+                    <span>🚪 Oda Yönetimi ve Kompost Girişleri</span>
+                    <span id="odaToggleIcon" style="transition: transform 0.3s; font-size: 11px;">▼</span>
+                </h3>
+            </div>
+            <div id="odaGridWrapper" style="padding: 0 21px 21px 21px; display: block; transition: all 0.3s;">
+                <div id="odaGrid" class="oda-grid"></div>
+                <div id="oda-kontrol-butonlari" style="display: flex; justify-content: flex-end; gap: 11px; margin-top: 21px;">
+                    <button class="btn-modern btn-danger" onclick="odaCikar()">➖ Oda Çıkar</button>
+                    <button class="btn-modern btn-success" onclick="odaEkle()">➕ Oda Ekle</button>
+                </div>
+            </div>
+        </div>
+        
+        <div class="takvimler-wrapper">
+            <div class="card takvim-alan">
+                <div id="baslikGecmis" style="text-align:center; font-weight:700; color:#3b82f6; font-size: 11px; margin-bottom: 11px;"></div>
+                <div class="takvim-grid" id="gridGecmis"></div>
+            </div>
+            <div class="card takvim-alan">
+                <div id="baslikSimdi" style="text-align:center; font-weight:700; color:#3b82f6; font-size: 11px; margin-bottom: 11px;"></div>
+                <div class="takvim-grid" id="gridSimdi"></div>
+            </div>
+        </div>
+
+        <div class="footer-btns">
+            <button class="btn-modern btn-primary btn-kaydet" onclick="verileriKaydet()">Verileri Kaydet ve Güncelle</button>
+        </div>
+    </div>
+</div>
+
+<div id="tab-mantar-takibi" class="tab-panel">
+    <div class="d2-container">
+        
+        <div class="header-area">
+            <div>
+                <h2 style="margin:0; font-size:15px;">Mantar Hasat Tablosu</h2>
+                <span style="color:#64748b; font-size:9px;">Günlük hasat verilerini odalara göre giriniz.</span>
+            </div>
+            <button class="btn-modern btn-danger" style="padding: 6px 11px;" onclick="printPDFDialog()">📄 Seçmeli PDF Yazdır</button>
+        </div>
+        
+        <div class="table-fixed-wrapper">
+            <table id="harvestTable" class="table-d2">
+                <thead>
+                    <tr><th class="col-date sticky-col">TARİH</th>
+                    <script>
+                        var tmpSzn = localStorage.getItem('mantar_aktif_sezon') || "1";
+                        var tmpOdaS = parseInt(localStorage.getItem('mantarOdaSayisiV14_S' + tmpSzn)) || 20;
+                        for(var i=1; i<=tmpOdaS; i++) document.write(`<th id="th-oda-${i}" style="width:57px">Oda ${i}</th>`);
+                    </script>
+                    <th style="width:60px; background: #0f172a; color:white;">TOPLAM</th></tr>
+                    
+                    <tr class="verim-satiri"><th class="sticky-col" style="background:#1e293b; color:#cbd5e1;">VERİM %</th>
+                    <script>for(var i=1; i<=tmpOdaS; i++) document.write(`<th id="col-yield-${i}">-</th>`);</script>
+                    <th id="yield-average" style="background:#e2e8f0;">%</th></tr>
+                    
+                    <tr class="sub-header"><th class="sticky-col" style="background:#1e293b; color:white;">Σ</th>
+                    <script>for(var i=1; i<=tmpOdaS; i++) document.write(`<th id="col-sum-${i}">0</th>`);</script>
+                    <th id="grand-sum" style="color: #ef4444; font-size: 13px;">0</th></tr>
+                </thead>
+                <tbody id="tableBody">
+                </tbody>
+            </table>
+        </div>
+        
+        <div class="add-row-bar">
+            <div style="display:flex; align-items:center; gap: 11px;">
+                <strong style="color: #334155; font-size:10px;">📅 Yeni Hasat Günü:</strong>
+                <input type="date" id="datePicker" style="padding: 6px 8px; border: 1px solid #cbd5e1; border-radius: 4px; outline: none; font-size:10px;">
+                <button class="btn-modern btn-success" style="padding: 7px 18px;" onclick="addRow()">Gün Ekle</button>
+            </div>
+            <span id="error" style="color: #ef4444; font-size: 10px; font-weight: 600;"></span>
+        </div>
+    </div>
+</div>
+
+<div id="tab-izin-listesi" class="tab-panel">
+    <div class="d3-wrapper">
+        <div class="card">
+            <div class="card-header">
+                <h3 style="margin:0; font-size:11px;">👥 Personel İzin Takibi</h3>
+                <button class="btn-modern btn-success" onclick="addPerson()">+ Yeni Personel Ekle</button>
+            </div>
+            
+            <div style="overflow-x: auto;">
+                <table class="table-d3">
+                    <thead><tr id="tableHeaderT3"></tr></thead>
+                    <tbody id="pBodyT3"></tbody>
+                </table>
+            </div>
+            
+            <div class="calendars-wrapper" id="calendarAreaT3"></div>
+            
+            <div style="margin-top: 35px; padding-top: 21px; border-top: 2px solid #f1f5f9;">
+                <h3 style="margin-bottom: 14px; font-size:11px;">📂 Geçmiş 8 Aylık İzin Arşivi</h3>
+                <div style="overflow-x: auto;">
+                    <table class="table-d3">
+                        <thead><tr id="archiveHeaderT3"></tr></thead>
+                        <tbody id="archiveBodyT3"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="clearSeasonModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; z-index:9999999; justify-content:center; align-items:center;">
+    <div class="modal-content" style="max-width:280px; text-align:center;">
+        <h3 style="color:#ef4444; margin-top:0; font-size:15px;">DİKKAT!</h3>
+        <p id="clearSeasonModalText" style="color:#475569; font-size:11px; line-height:1.5;">Sezon X'deki tüm veriler silinmek üzere emin misin?</p>
+        <div id="clearSeasonTimer" style="font-size:25px; font-weight:800; color:#ef4444; margin:14px 0; display:none;">7</div>
+        <div style="display:flex; gap:11px; justify-content:center; margin-top:21px;">
+            <button id="btnClearYes" onclick="sezonTemizleAdim1()" class="btn-modern btn-danger" style="flex:1;">Evet</button>
+            <button onclick="sezonTemizleIptal()" class="btn-modern" style="background:#94a3b8; color:white; flex:1;">İptal</button>
+        </div>
+    </div>
+</div>
+
+<div id="printModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; z-index:9999999; justify-content:center; align-items:center;">
+    <div class="modal-content" style="max-width:490px; width:90%;">
+        <h3 style="margin-top:0; border-bottom: 1px solid #e2e8f0; padding-bottom:11px; margin-bottom: 14px; font-size:11px;">Yazdırılacak Odaları Seçin</h3>
+        <div style="margin-bottom:14px; display:flex; gap:7px;">
+            <button onclick="secimHepsiniIsaretle(true)" class="btn-modern btn-primary">Tümünü Seç</button>
+            <button onclick="secimHepsiniIsaretle(false)" class="btn-modern btn-danger">Seçimi Temizle</button>
+        </div>
+        <div id="printOdaGrid" style="display:grid; grid-template-columns:repeat(auto-fill, minmax(70px, 1fr)); gap:11px; margin-bottom:21px; padding:11px; background:transparent; border-radius:6px; border:1px solid #e2e8f0;"></div>
+        <div style="display:flex; justify-content:flex-end; gap:11px;">
+            <button onclick="document.getElementById('printModal').style.display='none'" class="btn-modern" style="background:#94a3b8; color:white;">İptal</button>
+            <button onclick="seciliYazdir()" class="btn-modern btn-success">Yazdır</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    // --- TEMA YÖNETİMİ ---
+    function toggleThemeMenu() {
+        const menu = document.getElementById('themeDropdown');
+        const btn = document.getElementById('themeMenuBtn');
+        if (menu.style.display === 'flex') {
+            menu.style.display = 'none';
+            btn.style.transform = 'scale(1)';
+        } else {
+            menu.style.display = 'flex';
+            btn.style.transform = 'scale(1.1)';
+        }
+    }
+
+    function setTheme(themeName) {
+        document.body.setAttribute('data-theme', themeName);
+        localStorage.setItem('mantar_tema', themeName);
+        document.getElementById('themeDropdown').style.display = 'none';
+        document.getElementById('themeMenuBtn').style.transform = 'scale(1)';
+        
+        const dynamicTitle = document.getElementById('dynamic-tab-title');
+        if (themeName === 'modern') {
+            dynamicTitle.style.setProperty('color', '#1e293b', 'important');
+        } else {
+            dynamicTitle.style.setProperty('color', 'white', 'important');
+        }
+    }
+
+    document.addEventListener('click', function(event) {
+        const btn = document.getElementById('themeMenuBtn');
+        const menu = document.getElementById('themeDropdown');
+        if (event.target !== btn && !btn.contains(event.target) && event.target !== menu && !menu.contains(event.target)) {
+            menu.style.display = 'none';
+            btn.style.transform = 'scale(1)';
+        }
+    });
+
+    const savedTheme = localStorage.getItem('mantar_tema') || 'default';
+    setTheme(savedTheme);
+
+    // --- YEDEKLEMİ FONKSİYONLARI ---
+    function yedekAl() {
+        const keys = ['mantar_aktif_sezon', 'mantar_tema', 'mantar_personel'];
+        for (let s = 1; s <= 6; s++) {
+            keys.push(`mantarOdaSayisiV14_S${s}`);
+            keys.push(`mantarDataV14_S${s}`);
+            keys.push(`mantarHarvestData_S${s}`);
+            keys.push(`mantarAraliklarV14_S${s}`);
+        }
+        const backup = {};
+        keys.forEach(k => { const v = localStorage.getItem(k); if (v !== null) backup[k] = v; });
+        const blob = new Blob([JSON.stringify(backup, null, 2)], { type: 'application/json' });
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = `mantar_yedek_${new Date().toISOString().split('T')[0]}.json`;
+        a.click();
+        document.getElementById('themeDropdown').style.display = 'none';
+        document.getElementById('themeMenuBtn').style.transform = 'scale(1)';
+    }
+
+    function yedekYukle() {
+        const input = document.createElement('input');
+        input.type = 'file';
+        input.accept = '.json';
+        input.onchange = function(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = function(ev) {
+                try {
+                    const data = JSON.parse(ev.target.result);
+                    Object.keys(data).forEach(k => localStorage.setItem(k, data[k]));
+                    alert('Yedek başarıyla geri yüklendi! Sayfa yenilenecek.');
+                    location.reload();
+                } catch (err) {
+                    alert('Hata: Geçersiz yedek dosyası!');
+                }
+            };
+            reader.readAsText(file);
+        };
+        input.click();
+        document.getElementById('themeDropdown').style.display = 'none';
+        document.getElementById('themeMenuBtn').style.transform = 'scale(1)';
+    }
+
+    // --- SEZON YÖNETİMİ VE DİNAMİK ODA SAYISI ---
+    let AKTIF_SEZON = localStorage.getItem('mantar_aktif_sezon') || "1";
+    const ODA_SAYISI_KEY = `mantarOdaSayisiV14_S${AKTIF_SEZON}`;
+    let ODA_SAYISI = parseInt(localStorage.getItem(ODA_SAYISI_KEY)) || 20;
+
+    const MANTAR_DATA_KEY = `mantarDataV14_S${AKTIF_SEZON}`;
+    const HARVEST_DATA_KEY = `mantarHarvestData_S${AKTIF_SEZON}`;
+    const ARALIK_KEY = `mantarAraliklarV14_S${AKTIF_SEZON}`;
+
+    function sezonDegistir(yeniSezon) {
+        localStorage.setItem('mantar_aktif_sezon', yeniSezon);
+        location.reload();
+    }
+
+    function odaEkle() {
+        ODA_SAYISI++;
+        localStorage.setItem(ODA_SAYISI_KEY, ODA_SAYISI);
+        location.reload();
+    }
+
+    function odaCikar() {
+        if(ODA_SAYISI > 1) {
+            if(confirm(`Sezon ${AKTIF_SEZON} içindeki Oda ${ODA_SAYISI} kalıcı olarak silinecek. Emin misiniz?`)) {
+                let mantarData = JSON.parse(localStorage.getItem(MANTAR_DATA_KEY)) || {};
+                delete mantarData[ODA_SAYISI];
+                localStorage.setItem(MANTAR_DATA_KEY, JSON.stringify(mantarData));
+                
+                ODA_SAYISI--;
+                localStorage.setItem(ODA_SAYISI_KEY, ODA_SAYISI);
+                location.reload();
+            }
+        } else {
+            alert("Sistemde en az 1 oda bulunmalıdır!");
+        }
+    }
+
+    let clearSeasonTimerInterval;
+    let clearSeasonCountdown = 7;
+
+    function sezonTemizleBaslat() {
+        document.getElementById('clearSeasonModalText').innerText = `Sezon ${AKTIF_SEZON}'deki tüm veriler silinmek üzere emin misin?`;
+        document.getElementById('clearSeasonModal').style.display = 'flex';
+        document.getElementById('btnClearYes').style.display = 'block';
+        document.getElementById('btnClearYes').innerText = 'Evet';
+        document.getElementById('btnClearYes').onclick = sezonTemizleAdim1;
+        document.getElementById('clearSeasonTimer').style.display = 'none';
+    }
+
+    function sezonTemizleAdim1() {
+        clearSeasonCountdown = 7;
+        document.getElementById('clearSeasonModalText').innerText = `Silme işlemi onaylanıyor...`;
+        document.getElementById('btnClearYes').style.display = 'none';
+        document.getElementById('clearSeasonTimer').style.display = 'block';
+        document.getElementById('clearSeasonTimer').innerText = clearSeasonCountdown;
+        
+        clearSeasonTimerInterval = setInterval(() => {
+            clearSeasonCountdown--;
+            document.getElementById('clearSeasonTimer').innerText = clearSeasonCountdown;
+            if(clearSeasonCountdown <= 0) {
+                clearInterval(clearSeasonTimerInterval);
+                document.getElementById('clearSeasonModalText').innerText = `Kalıcı olarak silinecek. Onaylıyor musunuz?`;
+                document.getElementById('btnClearYes').style.display = 'block';
+                document.getElementById('btnClearYes').innerText = 'Kalıcı Olarak Sil';
+                document.getElementById('btnClearYes').onclick = sezonTemizleAdim2;
+                document.getElementById('clearSeasonTimer').style.display = 'none';
+            }
+        }, 1000);
+    }
+
+    function sezonTemizleIptal() {
+        clearInterval(clearSeasonTimerInterval);
+        document.getElementById('clearSeasonModal').style.display = 'none';
+    }
+
+    function sezonTemizleAdim2() {
+        localStorage.removeItem(MANTAR_DATA_KEY);
+        localStorage.removeItem(HARVEST_DATA_KEY);
+        alert(`Sezon ${AKTIF_SEZON} kompost ve hasat verileri temizlendi.`);
+        location.reload();
+    }
+
+    const tabTitles = {
+        'tab-mantar-tesisi': 'Tesis Yönetimi',
+        'tab-mantar-takibi': 'Mantar Hasat Takibi',
+        'tab-izin-listesi': 'İzin Takip ve Arşiv'
+    };
+
+    function openMainTab(evt, tabName) {
+        var i, tabcontent, tablinks;
+        tabcontent = document.getElementsByClassName("tab-panel");
+        for (i = 0; i < tabcontent.length; i++) { tabcontent[i].className = tabcontent[i].className.replace(" active", ""); }
+        tablinks = document.getElementsByClassName("nav-tab");
+        for (i = 0; i < tablinks.length; i++) { tablinks[i].className = tablinks[i].className.replace(" active", ""); }
+        document.getElementById(tabName).className += " active";
+        evt.currentTarget.className += " active";
+        document.getElementById('dynamic-tab-title').innerText = tabTitles[tabName];
+        if(tabName === 'tab-mantar-takibi') yieldHesaplaHepsini();
+    }
+
+    const AYLAR = ["Ocak", "Şubat", "Mart", "Nisan", "Mayıs", "Haziran", "Temmuz", "Ağustos", "Eylül", "Ekim", "Kasım", "Aralık"];
+    let ARALIKLAR = JSON.parse(localStorage.getItem(ARALIK_KEY)) || { toprak: 16, tirmik: 10, hava: 3, hasat1: 14, hasat2: 10 };
+
+    function ayarlariGoster() {
+        const liste = document.getElementById('ayarlarListesi');
+        if(!liste) return;
+        liste.innerHTML = `<div>Kompost ➔ Toprak: <b>+${ARALIKLAR.toprak} gün</b></div><div>Toprak ➔ Tırmık: <b>+${ARALIKLAR.tirmik} gün</b></div><div>Tırmık ➔ Hava: <b>+${ARALIKLAR.hava} gün</b></div><div style="color:#ef4444">Hava ➔ 1.Hasat: <b>+${ARALIKLAR.hasat1} gün</b></div><div>1.Hasat ➔ 2.Hasat: <b>+${ARALIKLAR.hasat2} gün</b></div>`;
+        document.getElementById('hint_toprak').innerText = `(+${ARALIKLAR.toprak} Gün)`; 
+        document.getElementById('hint_tirmik').innerText = `(+${ARALIKLAR.tirmik} Gün)`; 
+        document.getElementById('hint_hava').innerText = `(+${ARALIKLAR.hava} Gün)`; 
+        document.getElementById('hint_hasat1').innerText = `(+${ARALIKLAR.hasat1} Gün)`; 
+        document.getElementById('hint_hasat2').innerText = `(+${ARALIKLAR.hasat2} Gün)`;
+    }
+
+    function aralikGuncelle(tip) { 
+        const yeniDeger = prompt(`${tip.toUpperCase()} aralığını değiştir (Gün):`, ARALIKLAR[tip]); 
+        if (yeniDeger !== null && !isNaN(yeniDeger)) { 
+            ARALIKLAR[tip] = parseInt(yeniDeger); 
+            localStorage.setItem(ARALIK_KEY, JSON.stringify(ARALIKLAR)); 
+            location.reload(); 
+        } 
+    }
+
+    function gunEkle(tarihStr, gun) { 
+        if(!tarihStr) return null; 
+        let d = new Date(tarihStr); 
+        d.setDate(d.getDate() + gun); 
+        return d.toISOString().split('T')[0]; 
+    }
+
+    function akisHesapla(o) { 
+        const a = { kompost: o.tarih }; 
+        a.toprak = o.m_toprak || gunEkle(a.kompost, ARALIKLAR.toprak); 
+        a.tirmik = o.m_tirmik || gunEkle(a.toprak, ARALIKLAR.tirmik); 
+        a.hava = o.m_hava || gunEkle(a.tirmik, ARALIKLAR.hava); 
+        a.hasat1 = o.m_hasat1 || gunEkle(a.hava, ARALIKLAR.hasat1); 
+        a.hasat2 = gunEkle(a.hasat1, ARALIKLAR.hasat2); 
+        return a; 
+    }
+
+    function odalariOlustur() {
+        const grid = document.getElementById('odaGrid'); 
+        const data = JSON.parse(localStorage.getItem(MANTAR_DATA_KEY)) || {}; 
+        if(!grid) return;
+        grid.innerHTML = "";
+        for(let i=1; i<=ODA_SAYISI; i++) {
+            const o = data[i] || {tarih:'', kg:'', fiyat:'', m_toprak:'', m_tirmik:'', m_hava:'', m_hasat1:''};
+            const maliyet = (o.kg && o.fiyat) ? `${(o.kg * o.fiyat).toLocaleString('tr-TR')} ₺` : "0 ₺";
+            grid.innerHTML += `<div class="oda-kart">
+                <div class="oda-baslik"><h3>Oda ${i}</h3><div style="color:#ef4444; font-weight:700; font-size:11px;">Maliyet: ${maliyet}</div></div>
+                <div>
+                    <label>Kompost Giriş Tarihi / KG / Fiyat (₺)</label>
+                    <div class="input-group">
+                        <input type="date" id="tarih_${i}" value="${o.tarih}">
+                        <input type="number" id="kg_${i}" placeholder="KG" value="${o.kg}">
+                        <input type="number" id="fiyat_${i}" placeholder="₺ Fiyat" value="${o.fiyat}">
+                    </div>
+                </div>
+                <div class="manuel-section">
+                    <div><label>Manuel Toprak</label><input type="date" id="m_toprak_${i}" value="${o.m_toprak}"></div>
+                    <div><label>Manuel Tırmık</label><input type="date" id="m_tirmik_${i}" value="${o.m_tirmik}"></div>
+                    <div><label>Manuel Hava</label><input type="date" id="m_hava_${i}" value="${o.m_hava}"></div>
+                    <div><label>Manuel 1. Hasat</label><input type="date" id="m_hasat1_${i}" value="${o.m_hasat1}"></div>
+                </div>
+            </div>`;
+        }
+    }
+
+    function verileriKaydet() { 
+        const data = {}; 
+        for(let i=1; i<=ODA_SAYISI; i++) { 
+            data[i] = { 
+                tarih: document.getElementById(`tarih_${i}`).value, 
+                kg: document.getElementById(`kg_${i}`).value, 
+                fiyat: document.getElementById(`fiyat_${i}`).value, 
+                m_toprak: document.getElementById(`m_toprak_${i}`).value, 
+                m_tirmik: document.getElementById(`m_tirmik_${i}`).value, 
+                m_hava: document.getElementById(`m_hava_${i}`).value, 
+                m_hasat1: document.getElementById(`m_hasat1_${i}`).value 
+            }; 
+        } 
+        localStorage.setItem(MANTAR_DATA_KEY, JSON.stringify(data)); 
+        location.reload(); 
+    }
+
+    function sistemiGuncelle() {
+        const data = JSON.parse(localStorage.getItem(MANTAR_DATA_KEY)) || {}; 
+        const bugunStr = new Date().toISOString().split('T')[0]; 
+        const gövde = document.getElementById('tabloGövde'); 
+        if(!gövde) return;
+        gövde.innerHTML = ""; 
+        const tumAkislar = {};
+        for(let i=1; i<=ODA_SAYISI; i++) { 
+            if(data[i]?.tarih) { 
+                const a = akisHesapla(data[i]); 
+                tumAkislar[i] = a; 
+                let satir = `<tr><td><b style="font-weight:700;">Oda ${i}</b></td>`; 
+                Object.values(a).forEach(t => { 
+                    let cls = t < bugunStr ? "bg-gecmis" : (t === bugunStr ? "bg-bugun" : "bg-gelecek"); 
+                    let d = new Date(t); 
+                    satir += `<td><span class="badge ${cls}">${d.getDate()} ${AYLAR[d.getMonth()]}</span></td>`; 
+                }); 
+                gövde.innerHTML += satir + `</tr>`; 
+            } 
+        }
+        bildirimUret(tumAkislar); 
+        const simdi = new Date(); 
+        takvimUret(new Date(simdi.getFullYear(), simdi.getMonth() - 1, 1), "gridGecmis", "baslikGecmis", tumAkislar); 
+        takvimUret(simdi, "gridSimdi", "baslikSimdi", tumAkislar);
+    }
+
+    function bildirimUret(tumAkislar) {
+        const bGrid = document.getElementById('bildirimGrid'); 
+        if(!bGrid) return;
+        bGrid.innerHTML = ""; 
+        const bugun = new Date();
+        for(let i = -1; i <= 4; i++) {
+            let d = new Date(); 
+            d.setDate(bugun.getDate() + i); 
+            let dISO = d.toISOString().split('T')[0]; 
+            let etiket = i === -1 ? "Dün" : (i === 0 ? "BUGÜN" : (i === 1 ? "YARIN" : d.toLocaleDateString('tr-TR', {weekday:'long'})));
+            let vurguClass = (i === 0 || i === 1) ? "vurgu-kirmizi" : "";
+            let isler = [];
+            for(let o in tumAkislar) { 
+                const a = tumAkislar[o]; 
+                if(a.kompost === dISO) isler.push(`Oda ${o}: Kompost`); 
+                if(a.toprak === dISO) isler.push(`Oda ${o}: Toprak`); 
+                if(a.tirmik === dISO) isler.push(`Oda ${o}: Tırmık`); 
+                if(a.hava === dISO) isler.push(`Oda ${o}: Hava`); 
+                if(a.hasat1 === dISO) isler.push(`Oda ${o}: 1.Hasat`); 
+                if(a.hasat2 === dISO) isler.push(`Oda ${o}: 2.Hasat`); 
+            }
+            bGrid.innerHTML += `<div class="gun-kutusu ${vurguClass}"><h4>${etiket}<br><small style="font-weight:normal;">${d.getDate()} ${AYLAR[d.getMonth()]}</small></h4>${isler.map(is => `<div class="is-kalemi">${is}</div>`).join('') || '<div style="font-size:8px; text-align:center; margin-top:7px;">İş yok</div>'}</div>`;
+        }
+    }
+
+    function takvimUret(tarih, gridId, baslikId, tumAkislar) {
+        const grid = document.getElementById(gridId); 
+        const baslik = document.getElementById(baslikId); 
+        if(!grid) return;
+        const yil = tarih.getFullYear(), ay = tarih.getMonth(); 
+        baslik.innerText = `${AYLAR[ay]} ${yil}`; 
+        grid.innerHTML = "Pzt,Sal,Çar,Per,Cum,Cmt,Paz".split(',').map(g => `<div style="background:#e2e8f0; color:#475569; font-size:8px; text-align:center; padding:4px; font-weight:700; border-radius:3px;">${g}</div>`).join('');
+        const ilkGun = new Date(yil, ay, 1).getDay(); 
+        const bosluk = ilkGun === 0 ? 6 : ilkGun - 1; 
+        const sonGun = new Date(yil, ay + 1, 0).getDate();
+        for(let b=0; b<bosluk; b++) grid.innerHTML += `<div class="t-hucre" style="background:transparent; border:none;"></div>`;
+        for(let gun=1; gun<=sonGun; gun++) { 
+            const dISO = `${yil}-${String(ay+1).padStart(2,'0')}-${String(gun).padStart(2,'0')}`; 
+            let isler = ""; 
+            for(let o in tumAkislar) { 
+                const a = tumAkislar[o]; 
+                if(a.kompost === dISO) isler += `<div class="t-is">O${o}:Komp</div>`; 
+                if(a.toprak === dISO) isler += `<div class="t-is">O${o}:Topr</div>`; 
+                if(a.tirmik === dISO) isler += `<div class="t-is">O${o}:Tırm</div>`; 
+                if(a.hava === dISO) isler += `<div class="t-is">O${o}:Hava</div>`; 
+                if(a.hasat1 === dISO) isler += `<div class="t-is">O${o}:Has1</div>`; 
+                if(a.hasat2 === dISO) isler += `<div class="t-is">O${o}:Has2</div>`; 
+            } 
+            grid.innerHTML += `<div class="t-hucre"><b>${gun}</b>${isler}</div>`; 
+        }
+    }
+
+    function calc(el) {
+        const row = el.closest('tr'); const inputs = row.querySelectorAll('.room-input'); let rSum = 0; inputs.forEach(i => rSum += Number(i.value) || 0); row.querySelector('.row-total').innerText = rSum || "";
+        const cIdx = el.getAttribute('data-idx'); let cSum = 0; document.querySelectorAll(`.room-input[data-idx="${cIdx}"]`).forEach(i => cSum += Number(i.value) || 0); 
+        document.getElementById(`col-sum-${cIdx}`).innerText = cSum;
+        let gSum = 0; document.querySelectorAll('#tableBody .row-total').forEach(t => gSum += Number(t.innerText) || 0); 
+        document.getElementById('grand-sum').innerText = gSum;
+        
+        yieldHesapla(cIdx, cSum);
+        saveHarvestData();
+    }
+
+    function yieldHesapla(idx, totalKasa) {
+        const mantarData = JSON.parse(localStorage.getItem(MANTAR_DATA_KEY)) || {};
+        const kompostKg = Number(mantarData[idx]?.kg) || 0;
+        const cell = document.getElementById(`col-yield-${idx}`);
+        const hasatKg = totalKasa * 9;
+        
+        if(kompostKg > 0 && totalKasa > 0) {
+            const yuzde = (hasatKg / kompostKg) * 100;
+            cell.innerText = `%${yuzde.toFixed(2)}`;
+            cell.className = ""; 
+            if(yuzde <= 25) cell.classList.add('verim-kotu');
+            else if(yuzde < 30) cell.classList.add('verim-orta');
+            else cell.classList.add('verim-iyi');
+        } else {
+            if(cell) {
+                cell.innerText = "-";
+                cell.className = "";
+            }
+        }
+    }
+
+    function yieldHesaplaHepsini() {
+        for(let i=1; i<=ODA_SAYISI; i++) {
+            const sumEl = document.getElementById(`col-sum-${i}`);
+            const cSum = sumEl ? Number(sumEl.innerText) : 0;
+            yieldHesapla(i, cSum);
+        }
+    }
+
+    function addRow() {
+        const dVal = document.getElementById('datePicker').value; if(!dVal) return; const parts = dVal.split('-'); const fmt = parts[2] + '.' + parts[1];
+        if(typeof datesSet !== "undefined" && datesSet.has(fmt)) { document.getElementById('error').innerText = "⚠ BU TARİH ZATEN KAYITLI!"; return; } 
+        document.getElementById('error').innerText = ""; if(typeof datesSet !== "undefined") datesSet.add(fmt);
+        const body = document.getElementById('tableBody'); const tr = document.createElement('tr');
+        let html = `<td class="sticky-col"><input type="text" style="width:100%; height:100%; border:none; background:transparent; color:#38bdf8; text-align:center; font-size:10px; font-weight:700; outline:none;" value="${fmt}"></td>`;
+        for(let i=1; i<=ODA_SAYISI; i++) { html += `<td><input type="number" class="room-input" data-idx="${i}" oninput="calc(this)" placeholder=" "></td>`; }
+        html += `<td class="row-total"></td>`; tr.innerHTML = html; body.appendChild(tr);
+        saveHarvestData();
+    }
+
+    function saveHarvestData() {
+        const rows = document.querySelectorAll("#tableBody tr");
+        let data = [];
+        rows.forEach(row => {
+            const dateInput = row.querySelector("td input");
+            if(!dateInput) return;
+            const date = dateInput.value;
+            const inputs = row.querySelectorAll(".room-input");
+            let rooms = [];
+            inputs.forEach(i => rooms.push(i.value));
+            data.push({ date, rooms });
+        });
+        localStorage.setItem(HARVEST_DATA_KEY, JSON.stringify(data));
+    }
+
+    function loadHarvestData() {
+        const saved = JSON.parse(localStorage.getItem(HARVEST_DATA_KEY));
+        const body = document.getElementById("tableBody");
+        if(!body) return;
+        body.innerHTML = "";
+        datesSet = new Set();
+        if (!saved) return;
+        saved.forEach(rowData => {
+            datesSet.add(rowData.date);
+            const tr = document.createElement("tr");
+            let html = `<td class="sticky-col"><input type="text" style="width:100%; height:100%; border:none; background:transparent; color:#38bdf8; text-align:center; font-size:10px; font-weight:700; outline:none;" value="${rowData.date}"></td>`;
+            for (let i = 1; i <= ODA_SAYISI; i++) {
+                html += `<td><input type="number" class="room-input" data-idx="${i}" oninput="calc(this)" value="${rowData.rooms[i-1] || ''}" placeholder=" "></td>`;
+            }
+            html += `<td class="row-total"></td>`;
+            tr.innerHTML = html;
+            body.appendChild(tr);
+        });
+        document.querySelectorAll(".room-input").forEach(i => { if(i.value) calc(i); });
+        yieldHesaplaHepsini();
+    }
+
+    function printPDFDialog() {
+        const grid = document.getElementById('printOdaGrid');
+        grid.innerHTML = '';
+        for(let i=1; i<=ODA_SAYISI; i++) {
+            grid.innerHTML += `<label style="display:flex; align-items:center; gap:6px; font-weight:600; cursor:pointer;"><input type="checkbox" class="print-oda-cb" value="${i}" checked style="width:13px; height:13px; cursor:pointer;"> Oda ${i}</label>`;
+        }
+        document.getElementById('printModal').style.display = 'flex';
+    }
+
+    function secimHepsiniIsaretle(durum) {
+        document.querySelectorAll('.print-oda-cb').forEach(cb => cb.checked = durum);
+    }
+
+    function seciliYazdir() {
+        document.getElementById('printModal').style.display = 'none';
+        const seciliOdalar = [];
+        document.querySelectorAll('.print-oda-cb:checked').forEach(cb => seciliOdalar.push(parseInt(cb.value)));
+        
+        if(seciliOdalar.length === 0) { alert("Lütfen yazdırmak için en az bir oda seçin!"); return; }
+
+        const mantarData = JSON.parse(localStorage.getItem(MANTAR_DATA_KEY)) || {};
+        
+        document.querySelectorAll('#tableBody tr').forEach(row => {
+            let rowKasa = 0;
+            row.querySelectorAll('.room-input').forEach(input => {
+                const idx = parseInt(input.getAttribute('data-idx'));
+                const val = Number(input.value) || 0;
+                if(seciliOdalar.includes(idx)) {
+                    rowKasa += val;
+                    input.parentElement.style.display = ''; 
+                } else {
+                    input.parentElement.style.display = 'none'; 
+                }
+            });
+            const rowTotalCell = row.querySelector('.row-total');
+            rowTotalCell.setAttribute('data-original', rowTotalCell.innerText); 
+            rowTotalCell.innerText = rowKasa || "";
+        });
+
+        let genelToplamKasa = 0;
+        let toplamYuzdeDegeri = 0;
+        let gecerliOdaSayisi = 0;
+
+        for(let i=1; i<=ODA_SAYISI; i++) {
+            const displayState = seciliOdalar.includes(i) ? '' : 'none';
+            document.getElementById(`th-oda-${i}`).style.display = displayState;
+            document.getElementById(`col-yield-${i}`).style.display = displayState;
+            document.getElementById(`col-sum-${i}`).style.display = displayState;
+
+            if(seciliOdalar.includes(i)) {
+                const cSum = Number(document.getElementById(`col-sum-${i}`).innerText) || 0;
+                genelToplamKasa += cSum;
+                const kompostKg = Number(mantarData[i]?.kg) || 0;
+                if(kompostKg > 0 && cSum > 0) {
+                    const yuzde = ((cSum * 9) / kompostKg) * 100;
+                    toplamYuzdeDegeri += yuzde;
+                    gecerliOdaSayisi++;
+                }
+            }
+        }
+
+        let ortalamaVerimMetni = "-";
+        if(gecerliOdaSayisi > 0) ortalamaVerimMetni = "%" + (toplamYuzdeDegeri / gecerliOdaSayisi).toFixed(2);
+        
+        const grandSumEl = document.getElementById('grand-sum');
+        const originalGrandSum = grandSumEl.innerText;
+        grandSumEl.innerText = genelToplamKasa;
+
+        const reportHeader = document.createElement('div');
+        reportHeader.className = 'print-only-header';
+        reportHeader.style.display = 'none';
+        reportHeader.innerHTML = `<h2 style="text-align:center;">MANTAR HASAT RAPORU (SEZON ${AKTIF_SEZON})</h2>
+        <p style="text-align:center;">Seçilen Oda Sayısı: <b>${seciliOdalar.length}</b> | Toplam Kasa: <b>${genelToplamKasa}</b> | Toplam Hasat: <b>${(genelToplamKasa * 9).toLocaleString('tr-TR')} KG</b> | Ortalama Verim: <b>${ortalamaVerimMetni}</b></p><hr>`;
+        
+        const container = document.querySelector('.d2-container');
+        container.prepend(reportHeader);
+
+        window.print();
+
+        reportHeader.remove();
+        for(let i=1; i<=ODA_SAYISI; i++) {
+            document.getElementById(`th-oda-${i}`).style.display = '';
+            document.getElementById(`col-yield-${i}`).style.display = '';
+            document.getElementById(`col-sum-${i}`).style.display = '';
+        }
+        document.querySelectorAll('#tableBody tr').forEach(row => {
+            row.querySelectorAll('.room-input').forEach(input => { input.parentElement.style.display = ''; });
+            const rowTotalCell = row.querySelector('.row-total');
+            if(rowTotalCell.hasAttribute('data-original')) rowTotalCell.innerText = rowTotalCell.getAttribute('data-original');
+        });
+        grandSumEl.innerText = originalGrandSum;
+    }
+
+    const nowT3 = new Date(); const currentMonthIdx = nowT3.getMonth(); const currentYearT3 = nowT3.getFullYear(); const monthNamesT3 = ["Ocak", "Şubat", "Mart", "Nisan", "Mayıs", "Haziran", "Temmuz", "Ağustos", "Eylül", "Ekim", "Kasım", "Aralık"];
+    const activeMonths = [{ idx: currentMonthIdx - 1, year: currentMonthIdx === 0 ? currentYearT3 - 1 : currentYearT3 }, { idx: currentMonthIdx, year: currentYearT3 }, { idx: currentMonthIdx + 1, year: currentMonthIdx === 11 ? currentYearT3 + 1 : currentYearT3 }];
+    let archiveMonths = []; for(let i=1; i<=8; i++) { let d = new Date(currentYearT3, currentMonthIdx - i, 1); archiveMonths.push({ idx: d.getMonth(), year: d.getFullYear() }); }
+    let personnel = JSON.parse(localStorage.getItem('mantar_personel')) || [{ id: 1, name: "Ahmet", dates: [], color: "#3b82f6" }];
+    
+    function saveT3() { localStorage.setItem('mantar_personel', JSON.stringify(personnel)); }
+    
+    function renderT3() {
+        const tHeader = document.getElementById('tableHeaderT3'); 
+        if(!tHeader) return;
+        tHeader.innerHTML = `<th style="width:126px">PERSONEL</th><th style="width:84px">İŞLEM</th><th style="width:105px">İZİN EKLE</th><th>${monthNamesT3[fixMonth(activeMonths[0].idx)]}</th><th>${monthNamesT3[fixMonth(activeMonths[1].idx)]}</th><th>${monthNamesT3[fixMonth(activeMonths[2].idx)]}</th><th style="width:105px">KALAN HAK</th>`;
+        const aHeader = document.getElementById('archiveHeaderT3'); let aHeadHtml = `<th>PERSONEL</th>`; archiveMonths.forEach(m => aHeadHtml += `<th>${monthNamesT3[m.idx]} ${m.year}</th>`); aHeader.innerHTML = aHeadHtml;
+        const body = document.getElementById('pBodyT3'); const aBody = document.getElementById('archiveBodyT3'); body.innerHTML = ""; aBody.innerHTML = "";
+        
+        personnel.forEach(p => {
+            let counts = activeMonths.map(m => getCountT3(p, m.idx, m.year)); const remaining = 8 - (counts[0] + counts[1]); let statusClass = remaining > 0 ? "bg-orange" : (remaining == 0 ? "bg-green" : "bg-red"); let statusText = remaining < 0 ? `Eksi ${Math.abs(remaining)}` : (remaining == 0 ? "Tam" : `Kalan: ${remaining}`);
+            const tr = document.createElement('tr'); 
+            tr.innerHTML = `<td><input type="text" value="${p.name}" style="width:100%; padding:4px; border:1px solid transparent; background:transparent; text-align:center; font-weight:600; outline:none; transition:0.2s; border-radius:3px;" onfocus="this.style.border='1px solid #cbd5e1'; this.style.background='#fff';" onblur="this.style.border='1px solid transparent'; this.style.background='transparent';" onchange="updateNameT3(${p.id}, this.value)"></td>
+            <td><button class="btn-modern btn-danger" style="padding:3px 7px; font-size:8px;" onclick="deletePerson(${p.id})">Sil</button></td>
+            <td><input type="date" value="" style="padding:3px 6px;" onchange="if(this.value) { addDateT3(${p.id}, this.value); this.value=''; }"></td>
+            <td style="font-weight:bold; color:#475569;">${counts[0]}</td><td style="font-weight:bold; color:#475569;">${counts[1]}</td><td style="font-weight:bold; color:#475569;">${counts[2]}</td>
+            <td><div class="status-pill ${statusClass}">${statusText}</div></td>`; 
+            body.appendChild(tr);
+            const atr = document.createElement('tr'); let atrHtml = `<td style="font-weight:600;">${p.name}</td>`; archiveMonths.forEach(m => { atrHtml += `<td style="color:#64748b;">${getCountT3(p, m.idx, m.year)} Gün</td>`; }); atr.innerHTML = atrHtml; aBody.appendChild(atr);
+        });
+        renderCalendarsT3(); saveT3();
+    }
+
+    function deletePerson(id) { if(confirm("Personel silinsin mi?")) { personnel = personnel.filter(p => p.id !== id); renderT3(); } }
+    function renderCalendarsT3() {
+        const area = document.getElementById('calendarAreaT3'); if(!area) return; area.innerHTML = "";
+        activeMonths.forEach((m, i) => {
+            const mIdx = fixMonth(m.idx); const daysInMonth = new Date(m.year, mIdx + 1, 0).getDate();
+            let html = `<div class="calendar-box"><div><b>${monthNamesT3[mIdx]} ${m.year}</b> ${i===1?' <span style="color:#10b981; font-size:8px;">(ŞU AN)</span>':''}</div><div style="display:grid; grid-template-columns:repeat(7, 1fr); gap:3px;">`;
+            ["Pt", "Sa", "Çş", "Pş", "Cu", "Ct", "Pz"].forEach(d => html += `<div style="font-size:8px; font-weight:700; text-align:center; color:#64748b; padding-bottom:4px;">${d}</div>`);
+            for(let d=1; d<=daysInMonth; d++) {
+                const dateStr = `${m.year}-${String(mIdx+1).padStart(2, '0')}-${String(d).padStart(2, '0')}`; html += `<div class="day-cell"><b>${d}</b>`;
+                personnel.forEach(p => { if(p.dates.includes(dateStr)) { html += `<div class="event-tag" style="background:${p.color}" onclick="removeDateT3(${p.id},'${dateStr}')">${p.name}</div>`; } }); html += `</div>`;
+            }
+            area.innerHTML += html + `</div></div>`;
+        });
+    }
+    function getCountT3(p, mIdx, year) { let mStr = String(fixMonth(mIdx) + 1).padStart(2, '0'); let yStr = String(year); return p.dates.filter(d => d.startsWith(`${yStr}-${mStr}-`)).length; }
+    function fixMonth(m) { return (m + 12) % 12; }
+    function updateNameT3(id, newName) { personnel.find(p => p.id === id).name = newName; renderT3(); }
+    function addDateT3(id, date) { const p = personnel.find(x => x.id === id); if(!p.dates.includes(date)) { p.dates.push(date); renderT3(); } }
+    function removeDateT3(pid, dstr) { if(confirm("İzin silinsin mi?")) { const p = personnel.find(x => x.id === pid); p.dates = p.dates.filter(d => d !== dstr); renderT3(); } }
+    function addPerson() { const colors = ["#f59e0b", "#10b981", "#ef4444", "#3b82f6", "#8b5cf6", "#ec4899", "#14b8a6"]; personnel.push({ id: Date.now(), name: "Yeni Personel", dates: [], color: colors[personnel.length % colors.length] }); renderT3(); }
+
+    function toggleOdalar() {
+        const wrapper = document.getElementById('odaGridWrapper');
+        const icon = document.getElementById('odaToggleIcon');
+        if (wrapper.style.display === 'none') {
+            wrapper.style.display = 'block';
+            icon.style.transform = 'rotate(0deg)';
+        } else {
+            wrapper.style.display = 'none';
+            icon.style.transform = 'rotate(-90deg)';
+        }
+    }
+
+    window.onload = function() {
+        document.getElementById('seasonSelector').value = AKTIF_SEZON;
+        const dp = document.getElementById("datePicker");
+        if(dp) dp.value = new Date().toISOString().split('T')[0];
+        odalariOlustur(); sistemiGuncelle(); ayarlariGoster();
+        loadHarvestData(); renderT3();
+        document.getElementById('dynamic-tab-title').innerText = tabTitles['tab-mantar-tesisi'];
+    };
+</script>
+</body>
+</html>
